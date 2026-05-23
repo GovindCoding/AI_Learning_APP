@@ -1,0 +1,593 @@
+import type { Tool, NewsArticle, Quiz, Badge, User, LearningNode, DailyLog } from '../types';
+
+export const mockBadges: Badge[] = [
+  { id: 1, name: 'AI Novice', description: 'Begin your journey into Artificial Intelligence. Unlocked at 100 XP.', iconName: 'award', xpRequirement: 100 },
+  { id: 2, name: 'Python Scripter', description: 'Write your first Python-based neural network. Unlocked at 500 XP.', iconName: 'terminal', xpRequirement: 500 },
+  { id: 3, name: 'Prompt Engineering Master', description: 'Design complex zero-shot and few-shot prompts. Unlocked at 1000 XP.', iconName: 'cpu', xpRequirement: 1000 },
+  { id: 4, name: 'LangChain Developer', description: 'Build your first conversational AI agent. Unlocked at 2000 XP.', iconName: 'link', xpRequirement: 2000 },
+  { id: 5, name: 'RAG Specialist', description: 'Integrate vector databases with Large Language Models. Unlocked at 3000 XP.', iconName: 'database', xpRequirement: 3000 },
+  { id: 6, name: 'Deep Learning Guru', description: 'Train and fine-tune transformers from scratch. Unlocked at 5000 XP.', iconName: 'layers', xpRequirement: 5000 }
+];
+
+export const mockUser: User = {
+  id: 1,
+  username: 'AIElora',
+  email: 'elora@learningai.io',
+  level: 2,
+  xp: 1450,
+  streak: 5,
+  currentStreak: 5,
+  maxStreak: 12,
+  onboardingDone: true,
+  skillLevel: 'Beginner',
+  background: 'Software Engineer',
+  learningGoal: 'Generative AI Engineer',
+  hoursPerDay: 1.5,
+  learningStyle: 'hands-on projects',
+  createdAt: '2026-05-18T10:00:00Z',
+  roles: [{ id: 1, name: 'ROLE_USER' }],
+  badges: [mockBadges[0], mockBadges[1], mockBadges[2]]
+};
+
+export const mockTools: Tool[] = [
+  {
+    id: 1,
+    name: 'OpenAI GPT-4o',
+    category: 'LLMs',
+    description: 'Omni model by OpenAI that accepts image, audio, and text input and generates text, audio, and image outputs.',
+    websiteLink: 'https://openai.com/gpt-4',
+    chatbotLink: 'https://chatgpt.com',
+    playgroundLink: 'https://platform.openai.com/playground',
+    apiDocsLink: 'https://platform.openai.com/docs',
+    pricing: 'FREEMIUM',
+    features: 'Multimodal input, High-speed generation, JSON Mode, Function calling',
+    tags: 'openai,gpt-4,multimodal,llm',
+    popularityScore: 9.8,
+    communityRating: 4.9,
+    createdAt: '2026-05-10T12:00:00Z'
+  },
+  {
+    id: 2,
+    name: 'Claude 3.5 Sonnet',
+    category: 'LLMs',
+    description: 'Anthropic’s state-of-the-art model setting industry benchmarks for graduate-level reasoning, undergraduate-level knowledge, and coding proficiency.',
+    websiteLink: 'https://anthropic.com/claude',
+    chatbotLink: 'https://claude.ai',
+    playgroundLink: 'https://console.anthropic.com/workbench',
+    apiDocsLink: 'https://docs.anthropic.com',
+    pricing: 'FREEMIUM',
+    features: 'Advanced reasoning, 200k Context window, Artifacts interface, Superb code generation',
+    tags: 'anthropic,claude,coding,reasoning',
+    popularityScore: 9.7,
+    communityRating: 4.8,
+    createdAt: '2026-05-12T12:00:00Z'
+  },
+  {
+    id: 3,
+    name: 'Google Gemini 1.5 Pro',
+    category: 'LLMs',
+    description: 'Google’s next-generation multimodal model featuring an experimental 2-million token context window, enabling native processing of huge volumes of code, video, and audio.',
+    websiteLink: 'https://deepmind.google/technologies/gemini',
+    chatbotLink: 'https://gemini.google.com',
+    playgroundLink: 'https://aistudio.google.com',
+    apiDocsLink: 'https://ai.google.dev/docs',
+    pricing: 'FREEMIUM',
+    features: '2M Context window, Multimodal video/audio search, In-context learning, Code interpreter',
+    tags: 'google,gemini,long-context,multimodal',
+    popularityScore: 9.5,
+    communityRating: 4.7,
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 4,
+    name: 'LangChain',
+    category: 'RAG Frameworks',
+    description: 'A powerful framework designed to build applications with LLMs through composability, document loaders, vector store integrations, and memory orchestration.',
+    websiteLink: 'https://langchain.com',
+    apiDocsLink: 'https://python.langchain.com/docs',
+    pricing: 'FREE',
+    features: 'Chains, Multi-agent structures, Custom Tool calls, Memory systems',
+    tags: 'framework,rag,agents,python,javascript',
+    popularityScore: 9.4,
+    communityRating: 4.6,
+    githubLink: 'https://github.com/langchain-ai/langchain',
+    createdAt: '2026-05-01T12:00:00Z'
+  },
+  {
+    id: 5,
+    name: 'Pinecone',
+    category: 'Vector Databases',
+    description: 'A managed, highly scalable cloud vector database designed for high-speed similarity search and real-time retrieval-augmented generation (RAG) pipelines.',
+    websiteLink: 'https://pinecone.io',
+    playgroundLink: 'https://app.pinecone.io',
+    apiDocsLink: 'https://docs.pinecone.io',
+    pricing: 'FREEMIUM',
+    features: 'Metadata filtering, Serverless indexing, Real-time upserts, Low latency',
+    tags: 'database,vector,pinecone,rag',
+    popularityScore: 8.9,
+    communityRating: 4.4,
+    createdAt: '2026-05-02T12:00:00Z'
+  },
+  {
+    id: 6,
+    name: 'vLLM',
+    category: 'AI Deployment',
+    description: 'A high-throughput and memory-efficient LLM serving and paging engine utilizing PagedAttention, delivering high throughput for offline batch inference and online serving.',
+    websiteLink: 'https://vllm.ai',
+    apiDocsLink: 'https://docs.vllm.ai',
+    pricing: 'FREE',
+    features: 'PagedAttention mechanism, High-throughput serving, Continuous batching, Open-source compatibility',
+    tags: 'deployment,vllm,open-source,inference',
+    popularityScore: 9.1,
+    communityRating: 4.8,
+    githubLink: 'https://github.com/vllm-project/vllm',
+    createdAt: '2026-05-03T12:00:00Z'
+  },
+  {
+    id: 7,
+    name: 'Midjourney v6',
+    category: 'AI Image Generation',
+    description: 'An independent research lab exploring new mediums of thought, producing highly aesthetic and artistic photorealistic images via Discord prompts.',
+    websiteLink: 'https://midjourney.com',
+    chatbotLink: 'https://discord.gg/midjourney',
+    pricing: 'PAID',
+    features: 'High-detail text rendering, Photorealism engine, Advanced pan and zoom controls',
+    tags: 'images,midjourney,art,diffusion',
+    popularityScore: 9.6,
+    communityRating: 4.7,
+    createdAt: '2026-05-05T12:00:00Z'
+  },
+  {
+    id: 8,
+    name: 'CrewAI',
+    category: 'AI Agents',
+    description: 'Cutting-edge framework for orchestrating role-playing autonomous AI agents, enabling agents to work together seamlessly to solve complex tasks.',
+    websiteLink: 'https://crewai.com',
+    apiDocsLink: 'https://docs.crewai.com',
+    pricing: 'FREE',
+    features: 'Role-playing agents, Task delegation, Memory management, Customizable tools',
+    tags: 'agents,crewai,multi-agent,automation',
+    popularityScore: 9.0,
+    communityRating: 4.5,
+    githubLink: 'https://github.com/crewAI/crewAI',
+    createdAt: '2026-05-07T12:00:00Z'
+  },
+  {
+    id: 9,
+    name: 'Gemini App',
+    category: 'LLMs',
+    description: 'Google consumer conversational AI app powered by Gemini models, offering multimodal understanding, reasoning, and planning.',
+    websiteLink: 'https://gemini.google.com',
+    chatbotLink: 'https://gemini.google.com',
+    pricing: 'FREEMIUM',
+    features: 'Multimodal, Extensions (Workspace/YouTube), Advanced reasoning, Image generation',
+    tags: 'google,gemini,llm,chatbot',
+    popularityScore: 9.6,
+    communityRating: 4.6,
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 10,
+    name: 'Gemini API',
+    category: 'LLMs',
+    description: 'Developer API endpoint to access Google’s state-of-the-art multimodal Gemini models with massive context windows.',
+    websiteLink: 'https://ai.google.dev',
+    playgroundLink: 'https://aistudio.google.com',
+    apiDocsLink: 'https://ai.google.dev/docs',
+    pricing: 'FREEMIUM',
+    features: 'Function calling, System instructions, Structured outputs, High context window',
+    tags: 'google,gemini,api,developer',
+    popularityScore: 9.5,
+    communityRating: 4.7,
+    githubLink: 'https://github.com/google-gemini',
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 11,
+    name: 'Google AI Studio',
+    category: 'AI Development',
+    description: 'A web-based prototyping environment by Google for developers to experiment with Gemini models and export code in multiple languages.',
+    websiteLink: 'https://aistudio.google.com',
+    playgroundLink: 'https://aistudio.google.com',
+    apiDocsLink: 'https://ai.google.dev/docs',
+    pricing: 'FREE',
+    features: 'Quick prompting, System instructions parameter, Temperature tuner, Easy SDK code export',
+    tags: 'google,aistudio,prototyping,developer',
+    popularityScore: 9.4,
+    communityRating: 4.8,
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 12,
+    name: 'Vertex AI',
+    category: 'AI Deployment',
+    description: 'Google Cloud’s unified AI platform offering enterprise tools to train, evaluate, tune, and deploy generative AI models.',
+    websiteLink: 'https://cloud.google.com/vertex-ai',
+    apiDocsLink: 'https://cloud.google.com/vertex-ai/docs',
+    pricing: 'PAID',
+    features: 'Model tuning (LoRA), Vector Search, Feature store, Pipeline orchestration, Enterprise security',
+    tags: 'google,vertex,deployment,enterprise,cloud',
+    popularityScore: 9.2,
+    communityRating: 4.4,
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 13,
+    name: 'NotebookLM',
+    category: 'AI Productivity',
+    description: 'A personalized AI collaborator by Google that uses your own documents to generate summaries, study guides, and audio podcasts.',
+    websiteLink: 'https://notebooklm.google.com',
+    chatbotLink: 'https://notebooklm.google.com',
+    pricing: 'FREE',
+    features: 'Source-grounded answers, Audio Overviews (podcasts), Study guides, Citation links',
+    tags: 'google,notebooklm,productivity,rag',
+    popularityScore: 9.7,
+    communityRating: 4.9,
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 14,
+    name: 'Gemma',
+    category: 'LLMs',
+    description: 'A family of lightweight, state-of-the-art open-weights models built by Google from the same research and technology used to create Gemini.',
+    websiteLink: 'https://ai.google.dev/gemma',
+    apiDocsLink: 'https://ai.google.dev/gemma/docs',
+    pricing: 'FREE',
+    features: 'Open-weights, Local hosting, Quantization compatible, Lightweight and fast',
+    tags: 'google,gemma,opensource,llm,local',
+    popularityScore: 9.3,
+    communityRating: 4.7,
+    githubLink: 'https://github.com/google/gemma_pytorch',
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 15,
+    name: 'Imagen',
+    category: 'AI Image Generation',
+    description: 'Google’s advanced text-to-image diffusion model delivering high-fidelity photorealistic images and text rendering.',
+    websiteLink: 'https://deepmind.google/technologies/imagen-3',
+    apiDocsLink: 'https://cloud.google.com/vertex-ai/generative-ai/docs/image/overview',
+    pricing: 'PAID',
+    features: 'Photorealistic detail, High-quality text rendering, Aspect ratio control',
+    tags: 'google,imagen,image-gen,diffusion',
+    popularityScore: 9.1,
+    communityRating: 4.5,
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 16,
+    name: 'Veo',
+    category: 'AI Video Generation',
+    description: 'Google’s most capable generative video model, producing high-definition video in diverse cinematic styles from text prompts.',
+    websiteLink: 'https://deepmind.google/technologies/veo',
+    apiDocsLink: 'https://cloud.google.com/vertex-ai/generative-ai/docs/video/overview',
+    pricing: 'PAID',
+    features: 'High-definition 1080p, Cinematic controls, Creative consistency',
+    tags: 'google,veo,video-gen,diffusion',
+    popularityScore: 9.2,
+    communityRating: 4.6,
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 17,
+    name: 'Lyria',
+    category: 'AI Audio Generation',
+    description: 'Google DeepMind’s music generation model designed to create high-quality audio tracks with vocals and instrumentals.',
+    websiteLink: 'https://deepmind.google/technologies/lyria',
+    pricing: 'PAID',
+    features: 'Vocal synthesis, Instrumental tracks, Watermarked output (SynthID)',
+    tags: 'google,lyria,audio-gen,music',
+    popularityScore: 8.8,
+    communityRating: 4.3,
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 18,
+    name: 'DeepMind AlphaFold',
+    category: 'AI Biology',
+    description: 'An AI system developed by Google DeepMind that predicts 3D structure and biomolecular interactions of proteins, DNA, and RNA.',
+    websiteLink: 'https://deepmind.google/alphafold-3',
+    playgroundLink: 'https://alphafoldserver.com',
+    apiDocsLink: 'https://github.com/google-deepmind/alphafold3',
+    pricing: 'FREE',
+    features: 'Biomolecular modeling, DNA/RNA interactions, High accuracy structure prediction',
+    tags: 'google,deepmind,alphafold,biology,science',
+    popularityScore: 9.9,
+    communityRating: 4.9,
+    githubLink: 'https://github.com/google-deepmind/alphafold3',
+    createdAt: '2026-05-15T12:00:00Z'
+  },
+  {
+    id: 19,
+    name: 'Gemini CLI / Antigravity',
+    category: 'Developer Tools',
+    description: 'A fast, command-line interface and developer agent for interacting with the Google Gemini API directly from the terminal.',
+    websiteLink: 'https://github.com/google-gemini/gemini-cli',
+    pricing: 'FREE',
+    features: 'Shell execution, Auto code completions, File pipeline uploads',
+    tags: 'google,gemini,cli,terminal,antigravity',
+    popularityScore: 9.0,
+    communityRating: 4.5,
+    githubLink: 'https://github.com/google-gemini/gemini-cli',
+    createdAt: '2026-05-15T12:00:00Z'
+  }
+];
+
+export const mockNews: NewsArticle[] = [
+  {
+    id: 1,
+    title: 'Anthropic Releases Claude 3.5 Sonnet Setting New Coding Records',
+    summary: 'Anthropic has unveiled Claude 3.5 Sonnet, raising the bar for intelligence, speed, and cost-efficiency. It outperforms competitors in coding tasks, math problems, and visual recognition.',
+    aiSummary: 'Anthropic launched Claude 3.5 Sonnet, demonstrating substantial leaps in coding and visual logic benchmarks. It runs at double the speed of Claude 3 Opus and features an Artifacts interface for rendering code outputs interactively. Available to all users.',
+    source: 'Anthropic Blog',
+    category: 'Anthropic updates',
+    publishedDate: '2026-05-20T10:00:00Z',
+    articleLink: 'https://anthropic.com/news/claude-3-5-sonnet',
+    tags: 'claude,anthropic,release,coding',
+    createdAt: '2026-05-20T10:00:00Z'
+  },
+  {
+    id: 2,
+    title: 'Google DeepMind Introduces AlphaFold 3 with Biomolecular Interaction Support',
+    summary: 'Google DeepMind announced AlphaFold 3, which can predict the structure and interactions of DNA, RNA, proteins, and chemical compounds, opening new frontiers in drug discovery.',
+    aiSummary: 'AlphaFold 3 expands its structural predictions from proteins to encompass DNA, RNA, chemical ligands, and ion interactions. This gives scientists molecular-level insight into cellular machinery, radically accelerating research in disease treatment and drug development.',
+    source: 'Google DeepMind',
+    category: 'Google AI updates',
+    publishedDate: '2026-05-18T14:30:00Z',
+    articleLink: 'https://deepmind.google/alphafold-3',
+    tags: 'alphafold,deepmind,biology,research',
+    createdAt: '2026-05-18T14:30:00Z'
+  },
+  {
+    id: 3,
+    title: 'OpenAI Forms New Safety and Security Committee Led by CEO Sam Altman',
+    summary: 'Following high-profile departures from its superalignment team, OpenAI announced the formation of a Safety and Security Committee to oversee key security decisions for models.',
+    aiSummary: 'OpenAI formed a new Safety and Security Committee following internal restructuring. Led by Sam Altman and board members, it will formulate guidelines and conduct safety tests on incoming frontier models over the next 90 days.',
+    source: 'TechCrunch',
+    category: 'OpenAI updates',
+    publishedDate: '2026-05-22T09:15:00Z',
+    articleLink: 'https://techcrunch.com/openai-safety-committee',
+    tags: 'openai,safety,governance',
+    createdAt: '2026-05-22T09:15:00Z'
+  },
+  {
+    id: 4,
+    title: 'The Rise of AI Agents: CrewAI and LangGraph Dominate GitHub Trending',
+    summary: 'AI Agent frameworks that orchestrate multi-agent collaboration are seeing unprecedented interest on GitHub. Developers are shifting from simple prompt-response patterns to autonomous loop architectures.',
+    aiSummary: 'Multi-agent coordination libraries (CrewAI, LangGraph) are topping GitHub popularity charts. This signals a developmental shift from single prompt chatbots to task-oriented agent systems that decompose work, delegate actions, and verify results.',
+    source: 'Hacker News',
+    category: 'AI GitHub trending',
+    publishedDate: '2026-05-21T18:00:00Z',
+    articleLink: 'https://news.ycombinator.com/item?id=agents-trending',
+    tags: 'agents,github,crewai,langgraph',
+    createdAt: '2026-05-21T18:00:00Z'
+  },
+  {
+    id: 5,
+    title: 'Google DeepMind Launches Gemini 1.5 Flash for High-Speed Multimodal Efficiency',
+    summary: 'Google has announced Gemini 1.5 Flash, a lightweight model optimized for high-volume, low-latency, and cost-effective deployment with a 1-million token context window.',
+    aiSummary: 'Google released Gemini 1.5 Flash, setting a new benchmark for low-latency multimodal reasoning. It is designed to be highly cost-efficient and is available immediately in Google AI Studio.',
+    source: 'Google AI Blog',
+    category: 'Google AI updates',
+    publishedDate: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+    articleLink: 'https://blog.google/technology/ai/gemini-1.5-flash',
+    tags: 'google,gemini,flash,release,aistudio,google ai,deepmind,gemini models',
+    createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 6,
+    title: 'Google Announces Gemini Omni (GPT-4o Competitor) with Real-Time Video Interaction',
+    summary: 'During the Google I/O developer conference, Google previewed Gemini Omni, demonstrating native real-time conversation utilizing live video feed from smart glasses and mobile cameras.',
+    aiSummary: 'Google introduced Gemini Omni (Project Astra prototypes), showcasing real-time audio and video conversation. The model accepts visual camera inputs and responds vocally with zero lag.',
+    source: 'Google Developers Blog',
+    category: 'Google I/O announcements',
+    publishedDate: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+    articleLink: 'https://developers.googleblog.com/gemini-omni-io',
+    tags: 'google,gemini,omni,io,multimodal,google ai,gemini models',
+    createdAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 7,
+    title: 'Google Search Rolls Out AI Overviews Globally, Transforming Search Engine Landscape',
+    summary: 'Google has officially launched AI Overviews in search results, leveraging a customized Gemini model to summarize complex queries and link relevant sources.',
+    aiSummary: 'Google Search upgraded with AI Overviews. Using a tailored Gemini model, it synthesizes search answers and displays them directly at the top of query results, changing organic SEO paradigms.',
+    source: 'Google AI Blog',
+    category: 'Google Search AI changes',
+    publishedDate: new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString(),
+    articleLink: 'https://blog.google/products/search/ai-overviews-rollout',
+    tags: 'google,search,overview,gemini,google ai,google search ai',
+    createdAt: new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 8,
+    title: 'DeepMind Releases AlphaFold 3, Modeling Complex Molecular Assemblies',
+    summary: 'Google DeepMind has published details of AlphaFold 3, predicting structures of proteins, DNA, RNA, and chemical compounds with high precision, accelerating drug discovery.',
+    aiSummary: 'AlphaFold 3 extends structural prediction to DNA, RNA, and chemical ligands. This enables deep insight into biological processes and accelerates pharmaceutical research.',
+    source: 'DeepMind Blog',
+    category: 'DeepMind research papers',
+    publishedDate: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+    articleLink: 'https://deepmind.google/blog/alphafold-3-release',
+    tags: 'google,deepmind,alphafold,biology,deepmind research',
+    createdAt: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 9,
+    title: 'Google Cloud Vertex AI Integrates Gemma 2 Open Models for Enterprise Deployment',
+    summary: 'Google has integrated Gemma 2 models (9B and 27B) into Vertex AI, offering optimized serving pipelines and one-click deployment for enterprises.',
+    aiSummary: 'Google added Gemma 2 (9B and 27B) to Vertex AI Model Garden. Enterprises can now deploy, evaluate, and fine-tune Gemma 2 models using Google Cloud infrastructure.',
+    source: 'Google Cloud AI Blog',
+    category: 'Vertex AI announcements',
+    publishedDate: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
+    articleLink: 'https://cloud.google.com/blog/vertex-ai-gemma2',
+    tags: 'google,vertex,gemma,cloud,vertex ai',
+    createdAt: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 10,
+    title: 'Antigravity: Google Developers Unveil Next-Gen Autonomous AI Coding Agent',
+    summary: 'Google Developers have showcased Antigravity, an open-source autonomous coding agent that hooks into the Gemini API to execute complex file refactoring and database migrations.',
+    aiSummary: 'Google Developers released Antigravity, an autonomous developer agent. Hooked into Gemini API, it solves code tasks, manages dependencies, and runs terminal compilations independently.',
+    source: 'Google Developers Blog',
+    category: 'Gemini agentic AI updates',
+    publishedDate: new Date(Date.now() - 20 * 24 * 3600 * 1000).toISOString(),
+    articleLink: 'https://developers.googleblog.com/antigravity-agent',
+    tags: 'google,gemini,antigravity,agent,coding,gemini cli,antigravity',
+    createdAt: new Date(Date.now() - 20 * 24 * 3600 * 1000).toISOString()
+  }
+];
+
+export const mockQuizzes: Record<number, Quiz[]> = {
+  1: [
+    {
+      id: 101,
+      nodeId: 1,
+      question: 'What is the primary difference between AI and Machine Learning (ML)?',
+      optionA: 'AI is a subset of ML focusing only on neural networks.',
+      optionB: 'ML is a subset of AI that allows computers to learn from data without explicit programming.',
+      optionC: 'AI refers only to humanoid robots, whereas ML refers to statistical formulas.',
+      optionD: 'There is no difference; they are exact synonyms.',
+      correctOption: 'B'
+    },
+    {
+      id: 102,
+      nodeId: 1,
+      question: 'Which of the following is an example of Supervised Learning?',
+      optionA: 'Clustering customers based on purchasing history.',
+      optionB: 'Training a chatbot to speak by letting it browse the internet.',
+      optionC: 'Predicting house prices using a labeled dataset of historical home sales.',
+      optionD: 'Reducing the number of dimensions in an image dataset.',
+      correctOption: 'C'
+    }
+  ],
+  2: [
+    {
+      id: 201,
+      nodeId: 2,
+      question: 'Which Python library is primarily used for multi-dimensional array operations and scientific computation?',
+      optionA: 'Pandas',
+      optionB: 'NumPy',
+      optionC: 'Scikit-Learn',
+      optionD: 'Matplotlib',
+      correctOption: 'B'
+    },
+    {
+      id: 202,
+      nodeId: 2,
+      question: 'How do you create a virtual environment in Python using the standard library?',
+      optionA: 'python -m venv myenv',
+      optionB: 'pip install virtualenv',
+      optionC: 'npm init env',
+      optionD: 'python -m conda myenv',
+      correctOption: 'A'
+    }
+  ],
+  3: [
+    {
+      id: 301,
+      nodeId: 3,
+      question: 'What is the purpose of an activation function in a neural network?',
+      optionA: 'To compute the loss between predicted and actual values.',
+      optionB: 'To introduce non-linearity, allowing the network to learn complex patterns.',
+      optionC: 'To adjust the learning rate during gradient descent.',
+      optionD: 'To normalize the inputs of the input layer.',
+      correctOption: 'B'
+    },
+    {
+      id: 302,
+      nodeId: 3,
+      question: 'What problem does the backpropagation algorithm solve?',
+      optionA: 'It initializes the weights of a neural network randomly.',
+      optionB: 'It computes the gradients of the loss function with respect to the network weights.',
+      optionC: 'It accelerates the execution of model inference on CPUs.',
+      optionD: 'It clusters data points in unsupervised fashion.',
+      correctOption: 'B'
+    }
+  ]
+};
+
+export const defaultRoadmapNodes: LearningNode[] = [
+  {
+    id: 1,
+    roadmapId: 1,
+    title: 'AI & Machine Learning Fundamentals',
+    description: 'Learn core definitions, supervised/unsupervised learning, algorithms, and evaluation metrics.',
+    difficulty: 'beginner',
+    durationHours: 5,
+    status: 'COMPLETED',
+    quizScore: 100,
+    completedAt: '2026-05-19T14:00:00Z',
+    sequenceOrder: 1
+  },
+  {
+    id: 2,
+    roadmapId: 1,
+    title: 'Python & Math Foundations for AI',
+    description: 'Master NumPy, Pandas, linear algebra, calculus, and basic probability required for model modeling.',
+    difficulty: 'beginner',
+    durationHours: 8,
+    status: 'COMPLETED',
+    quizScore: 90,
+    completedAt: '2026-05-21T18:00:00Z',
+    sequenceOrder: 2
+  },
+  {
+    id: 3,
+    roadmapId: 1,
+    title: 'Introduction to LLMs & Prompt Engineering',
+    description: 'Study tokenization, model parameters, zero-shot/few-shot prompting, and chain-of-thought engineering.',
+    difficulty: 'intermediate',
+    durationHours: 10,
+    status: 'IN_PROGRESS',
+    sequenceOrder: 3,
+    parentNodeId: 2
+  },
+  {
+    id: 4,
+    roadmapId: 1,
+    title: 'Vector Databases & Semantic Search',
+    description: 'Learn about embeddings, indexing, and querying vectors in Pinecone, Milvus, and ChromaDB.',
+    difficulty: 'intermediate',
+    durationHours: 8,
+    status: 'NOT_STARTED',
+    sequenceOrder: 4,
+    parentNodeId: 3
+  },
+  {
+    id: 5,
+    roadmapId: 1,
+    title: 'Retrieval-Augmented Generation (RAG) Systems',
+    description: 'Integrate LLMs with vector stores to create Q&A systems over private knowledge documents.',
+    difficulty: 'advanced',
+    durationHours: 18,
+    status: 'NOT_STARTED',
+    sequenceOrder: 5,
+    parentNodeId: 4
+  },
+  {
+    id: 6,
+    roadmapId: 1,
+    title: 'Autonomous AI Agents',
+    description: 'Deploy multi-agent teams using CrewAI or LangGraph for autonomous task execution.',
+    difficulty: 'advanced',
+    durationHours: 15,
+    status: 'NOT_STARTED',
+    sequenceOrder: 6,
+    parentNodeId: 5
+  }
+];
+
+// Activity logs over the last 15 days
+export const mockDailyLogs: DailyLog[] = [
+  { id: 1, userId: 1, logDate: '2026-05-08', hoursLearned: 1.0, nodesCompleted: 0, xpGained: 50 },
+  { id: 2, userId: 1, logDate: '2026-05-09', hoursLearned: 0.5, nodesCompleted: 0, xpGained: 25 },
+  { id: 3, userId: 1, logDate: '2026-05-11', hoursLearned: 1.5, nodesCompleted: 0, xpGained: 75 },
+  { id: 4, userId: 1, logDate: '2026-05-12', hoursLearned: 2.0, nodesCompleted: 0, xpGained: 100 },
+  { id: 5, userId: 1, logDate: '2026-05-14', hoursLearned: 1.0, nodesCompleted: 0, xpGained: 50 },
+  { id: 6, userId: 1, logDate: '2026-05-15', hoursLearned: 1.2, nodesCompleted: 0, xpGained: 60 },
+  { id: 7, userId: 1, logDate: '2026-05-16', hoursLearned: 1.8, nodesCompleted: 0, xpGained: 90 },
+  { id: 8, userId: 1, logDate: '2026-05-18', hoursLearned: 2.2, nodesCompleted: 0, xpGained: 110 },
+  { id: 9, userId: 1, logDate: '2026-05-19', hoursLearned: 5.0, nodesCompleted: 1, xpGained: 250 },
+  { id: 10, userId: 1, logDate: '2026-05-20', hoursLearned: 1.5, nodesCompleted: 0, xpGained: 75 },
+  { id: 11, userId: 1, logDate: '2026-05-21', hoursLearned: 8.0, nodesCompleted: 1, xpGained: 290 },
+  { id: 12, userId: 1, logDate: '2026-05-22', hoursLearned: 1.0, nodesCompleted: 0, xpGained: 50 }
+];

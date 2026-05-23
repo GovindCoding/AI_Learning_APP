@@ -1,0 +1,158 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  labels:
+    app: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: ai-auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              name: auth-port
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-db:3306/ai_auth_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  ports:
+    - port: 8081
+      targetPort: 8081
+  selector:
+    app: auth-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learning-service
+  labels:
+    app: learning-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: learning-service
+  template:
+    metadata:
+      labels:
+        app: learning-service
+    spec:
+      containers:
+        - name: learning-service
+          image: ai-learning-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+              name: learning-port
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-db:3306/ai_learning_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: learning-service
+spec:
+  ports:
+    - port: 8082
+      targetPort: 8082
+  selector:
+    app: learning-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tools-news-service
+  labels:
+    app: tools-news-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tools-news-service
+  template:
+    metadata:
+      labels:
+        app: tools-news-service
+    spec:
+      containers:
+        - name: tools-news-service
+          image: ai-tools-news-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+              name: tools-news-port
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-db:3306/ai_tools_news_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-tracker-config
+                  key: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tools-news-service
+spec:
+  ports:
+    - port: 8083
+      targetPort: 8083
+  selector:
+    app: tools-news-service

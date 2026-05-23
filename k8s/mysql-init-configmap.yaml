@@ -1,0 +1,248 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-scripts
+data:
+  1-schema.sql: |
+    -- MySQL Database Schema for AI Learning Tracker Web Application
+    -- Username: root | Password: admin1234
+
+    -- ==========================================
+    -- 1. AUTHENTICATION & PROFILE DATABASE (ai_auth_db)
+    -- ==========================================
+    CREATE DATABASE IF NOT EXISTS ai_auth_db;
+    USE ai_auth_db;
+
+    CREATE TABLE IF NOT EXISTS roles (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(20) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) NOT NULL UNIQUE,
+        email VARCHAR(100) NOT NULL UNIQUE,
+        password VARCHAR(120) NOT NULL,
+        level INT DEFAULT 1,
+        xp INT DEFAULT 0,
+        streak INT DEFAULT 0,
+        current_streak INT DEFAULT 0,
+        max_streak INT DEFAULT 0,
+        onboarding_done BOOLEAN DEFAULT FALSE,
+        skill_level VARCHAR(20),
+        background VARCHAR(30),
+        learning_goal VARCHAR(30),
+        hours_per_day DOUBLE DEFAULT 1.0,
+        learning_style VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS user_roles (
+        user_id BIGINT NOT NULL,
+        role_id INT NOT NULL,
+        PRIMARY KEY (user_id, role_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS badges (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE,
+        description VARCHAR(255) NOT NULL,
+        icon_name VARCHAR(50) NOT NULL,
+        xp_requirement INT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS user_badges (
+        user_id BIGINT NOT NULL,
+        badge_id INT NOT NULL,
+        unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, badge_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE
+    );
+
+    -- ==========================================
+    -- 2. LEARNING & ROADMAP DATABASE (ai_learning_db)
+    -- ==========================================
+    CREATE DATABASE IF NOT EXISTS ai_learning_db;
+    USE ai_learning_db;
+
+    CREATE TABLE IF NOT EXISTS roadmaps (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        skill_level VARCHAR(20) NOT NULL,
+        background VARCHAR(30) NOT NULL,
+        goal VARCHAR(30) NOT NULL,
+        target_hours_per_day DOUBLE DEFAULT 1.0,
+        learning_style VARCHAR(20) NOT NULL,
+        estimated_completion_weeks INT DEFAULT 12,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS learning_nodes (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        roadmap_id BIGINT NOT NULL,
+        title VARCHAR(100) NOT NULL,
+        description TEXT NOT NULL,
+        difficulty VARCHAR(20) NOT NULL,
+        duration_hours DOUBLE NOT NULL,
+        status VARCHAR(20) DEFAULT 'NOT_STARTED', -- NOT_STARTED, IN_PROGRESS, COMPLETED
+        quiz_score INT DEFAULT NULL,
+        completed_at TIMESTAMP NULL,
+        sequence_order INT NOT NULL,
+        parent_node_id BIGINT DEFAULT NULL,
+        FOREIGN KEY (roadmap_id) REFERENCES roadmaps(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS daily_logs (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        log_date DATE NOT NULL,
+        hours_learned DOUBLE DEFAULT 0.0,
+        nodes_completed INT DEFAULT 0,
+        xp_gained INT DEFAULT 0,
+        notes TEXT,
+        UNIQUE KEY unique_user_date (user_id, log_date)
+    );
+
+    CREATE TABLE IF NOT EXISTS quizzes (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        node_id BIGINT NOT NULL,
+        question TEXT NOT NULL,
+        option_a VARCHAR(255) NOT NULL,
+        option_b VARCHAR(255) NOT NULL,
+        option_c VARCHAR(255) NOT NULL,
+        option_d VARCHAR(255) NOT NULL,
+        correct_option CHAR(1) NOT NULL -- A, B, C, or D
+    );
+
+    -- ==========================================
+    -- 3. TOOLS & NEWS DATABASE (ai_tools_news_db)
+    -- ==========================================
+    CREATE DATABASE IF NOT EXISTS ai_tools_news_db;
+    USE ai_tools_news_db;
+
+    CREATE TABLE IF NOT EXISTS ai_tools (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        category VARCHAR(50) NOT NULL,
+        description TEXT NOT NULL,
+        website_link VARCHAR(255) NOT NULL,
+        chatbot_link VARCHAR(255),
+        playground_link VARCHAR(255),
+        api_docs_link VARCHAR(255),
+        pricing VARCHAR(20) DEFAULT 'FREE', -- FREE, PAID, FREEMIUM, OPEN_SOURCE
+        features TEXT, -- JSON-formatted or comma-separated lists
+        tags VARCHAR(255),
+        popularity_score DOUBLE DEFAULT 0.0,
+        community_rating DOUBLE DEFAULT 0.0,
+        github_link VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS news_articles (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        summary TEXT NOT NULL,
+        ai_summary TEXT,
+        source VARCHAR(100) NOT NULL,
+        category VARCHAR(50) NOT NULL,
+        published_date TIMESTAMP NOT NULL,
+        article_link VARCHAR(255) NOT NULL,
+        tags VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS bookmarks (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        item_type VARCHAR(10) NOT NULL, -- TOOL or NEWS
+        item_id BIGINT NOT NULL,
+        saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_user_bookmark (user_id, item_type, item_id)
+    );
+
+  2-seed.sql: |
+    -- Seed Data for AI Learning Tracker
+    -- Run this script to populate the databases with standard values and rich mockup datasets.
+
+    -- ==========================================
+    -- 1. POPULATE AUTH & PROFILE DATABASE (ai_auth_db)
+    -- ==========================================
+    USE ai_auth_db;
+
+    -- Standard Roles
+    INSERT INTO roles (id, name) VALUES (1, 'ROLE_USER') ON DUPLICATE KEY UPDATE name=name;
+    INSERT INTO roles (id, name) VALUES (2, 'ROLE_ADMIN') ON DUPLICATE KEY UPDATE name=name;
+
+    -- Gamification Badges
+    INSERT INTO badges (name, description, icon_name, xp_requirement) VALUES
+    ('AI Novice', 'Welcome to the world of AI! Unlocked at 100 XP.', 'award', 100),
+    ('Python Scripter', 'Write your first Python-based neural network. Unlocked at 500 XP.', 'terminal', 500),
+    ('Prompt Engineering Master', 'Design complex zero-shot and few-shot prompts. Unlocked at 1000 XP.', 'cpu', 1000),
+    ('LangChain Developer', 'Build your first conversational AI agent. Unlocked at 2000 XP.', 'link', 2000),
+    ('RAG Specialist', 'Integrate vector databases with Large Language Models. Unlocked at 3000 XP.', 'database', 3000),
+    ('Deep Learning Guru', 'Train and fine-tune transformers from scratch. Unlocked at 5000 XP.', 'layers', 5000)
+    ON DUPLICATE KEY UPDATE description=VALUES(description), icon_name=VALUES(icon_name), xp_requirement=VALUES(xp_requirement);
+
+    -- ==========================================
+    -- 2. POPULATE TOOLS & NEWS DATABASE (ai_tools_news_db)
+    -- ==========================================
+    USE ai_tools_news_db;
+
+    -- Seed AI Tools
+    INSERT INTO ai_tools (name, category, description, website_link, chatbot_link, playground_link, api_docs_link, pricing, features, tags, popularity_score, community_rating, github_link) VALUES
+    ('OpenAI GPT-4o', 'LLMs', 'Omni model by OpenAI that accepts image, audio, and text input and generates text, audio, and image outputs.', 'https://openai.com/gpt-4', 'https://chatgpt.com', 'https://platform.openai.com/playground', 'https://platform.openai.com/docs', 'FREEMIUM', 'Multimodal, High-speed, Function calling, Vision understanding', 'openai,gpt4,multimodal,llm', 9.8, 4.9, NULL),
+    ('Claude 3.5 Sonnet', 'LLMs', 'Anthropic’s state-of-the-art model setting industry benchmarks for graduate-level reasoning, undergraduate-level knowledge, and coding proficiency.', 'https://anthropic.com/claude', 'https://claude.ai', 'https://console.anthropic.com/workbench', 'https://docs.anthropic.com', 'FREEMIUM', 'Advanced reasoning, Long context window (200k), Exceptional coding, Artifacts interface', 'anthropic,claude,llm,coding', 9.7, 4.8, NULL),
+    ('Google Gemini 1.5 Pro', 'LLMs', 'Google’s next-generation multimodal model featuring an experimental 2-million token context window, enabling native processing of huge volumes of code, video, and audio.', 'https://deepmind.google/technologies/gemini', 'https://gemini.google.com', 'https://aistudio.google.com', 'https://ai.google.dev/docs', 'FREEMIUM', 'Huge context window, Native multimodality, Video processing, Fast retrieval', 'google,gemini,multimodal,long-context', 9.5, 4.7, NULL),
+    ('LangChain', 'RAG Frameworks', 'A powerful framework designed to build applications with LLMs through composability, document loaders, vector store integrations, and memory orchestration.', 'https://langchain.com', NULL, NULL, 'https://python.langchain.com/docs', 'FREE', 'Chains, Agents, Memory, Model Abstractions, Retrieval interfaces', 'framework,rag,python,js,agents', 9.4, 4.6, 'https://github.com/langchain-ai/langchain'),
+    ('Pinecone', 'Vector Databases', 'A managed, highly scalable cloud vector database designed for high-speed similarity search and real-time retrieval-augmented generation (RAG) pipelines.', 'https://pinecone.io', NULL, 'https://app.pinecone.io', 'https://docs.pinecone.io', 'FREEMIUM', 'Fully managed, Real-time index updates, Metadata filtering, Hybrid search', 'database,vector,pinecone,rag', 8.9, 4.4, NULL),
+    ('vLLM', 'AI Deployment', 'A high-throughput and memory-efficient LLM serving and paging engine utilizing PagedAttention, delivering high throughput for offline batch inference and online serving.', 'https://vllm.ai', NULL, NULL, 'https://docs.vllm.ai', 'FREE', 'PagedAttention, High throughput, Continuous batching, Decoupled execution', 'deployment,open-source,inference,vllm', 9.1, 4.8, 'https://github.com/vllm-project/vllm'),
+    ('Midjourney v6', 'AI Image Generation', 'An independent research lab exploring new mediums of thought, producing highly aesthetic and artistic photorealistic images via Discord prompts.', 'https://midjourney.com', 'https://discord.gg/midjourney', NULL, 'https://docs.midjourney.com', 'PAID', 'Ultra-realistic styles, Aspect ratio control, Prompt complexity parsing, Text generation inside images', 'image-gen,midjourney,art,photorealistic', 9.6, 4.7, NULL),
+    ('CrewAI', 'AI Agents', 'Cutting-edge framework for orchestrating role-playing autonomous AI agents, enabling agents to work together seamlessly to solve complex tasks.', 'https://crewai.com', NULL, NULL, 'https://docs.crewai.com', 'FREE', 'Role-playing agents, Task delegation, Memory management, Process flows', 'agents,multi-agent,crewai,automation', 9.0, 4.5, 'https://github.com/crewAI/crewAI')
+    ON DUPLICATE KEY UPDATE description=VALUES(description), website_link=VALUES(website_link), pricing=VALUES(pricing), popularity_score=VALUES(popularity_score);
+
+    -- Seed News Articles
+    INSERT INTO news_articles (title, summary, ai_summary, source, category, published_date, article_link, tags) VALUES
+    ('Anthropic Releases Claude 3.5 Sonnet Setting New Coding Records', 'Anthropic has unveiled Claude 3.5 Sonnet, raising the bar for intelligence, speed, and cost-efficiency. It outperforms competitors in coding tasks, math problems, and visual recognition.', 'Anthropic launched Claude 3.5 Sonnet, showing major leaps in coding and reasoning tests. It runs at twice the speed of Claude 3 Opus. It is available for free on Claude.ai.', 'Anthropic Blog', 'Anthropic updates', '2026-05-20 10:00:00', 'https://anthropic.com/news/claude-3-5-sonnet', 'claude,anthropic,llm,release'),
+    ('Google DeepMind Introduces AlphaFold 3 with Biomolecular Interaction Support', 'Google DeepMind announced AlphaFold 3, which can predict the structure and interactions of DNA, RNA, proteins, and chemical compounds, opening new frontiers in drug discovery.', 'AlphaFold 3 goes beyond proteins to model DNA, RNA, and chemical ligands. This enables deep insight into biological processes and speeds up pharmaceutical research.', 'Google DeepMind', 'Google AI updates', '2026-05-18 14:30:00', 'https://deepmind.google/alphafold-3', 'alphafold,deepmind,biology,research'),
+    ('OpenAI Forms New Safety and Security Committee Led by CEO Sam Altman', 'Following high-profile departures from its superalignment team, OpenAI announced the formation of a Safety and Security Committee to oversee key security decisions for models.', 'OpenAI has established a Safety and Security Committee to review its AI development practices. The committee will recommend safety evaluations for future frontier models.', 'TechCrunch', 'OpenAI updates', '2026-05-22 09:15:00', 'https://techcrunch.com/openai-safety-committee', 'openai,safety,governance'),
+    ('The Rise of AI Agents: CrewAI and LangGraph Dominate GitHub Trending', 'AI Agent frameworks that orchestrate multi-agent collaboration are seeing unprecedented interest on GitHub. Developers are shifting from simple prompt-response patterns to autonomous loop architectures.', 'Multi-agent frameworks like CrewAI and LangGraph are topping GitHub charts. This marks a paradigm shift from basic chatbots to agentic workflows that execute complex multi-step tasks.', 'Hacker News', 'AI GitHub trending', '2026-05-21 18:00:00', 'https://news.ycombinator.com/item?id=agents-trending', 'agents,github,crewai,langgraph')
+    ON DUPLICATE KEY UPDATE summary=VALUES(summary), ai_summary=VALUES(ai_summary);
+
+    -- ==========================================
+    -- 3. POPULATE LEARNING & ROADMAP DATABASE (ai_learning_db)
+    -- ==========================================
+    USE ai_learning_db;
+
+    -- Seed Quizzes for Roadmap Nodes
+    -- Node 1: AI Fundamentals
+    INSERT INTO quizzes (node_id, question, option_a, option_b, option_c, option_d, correct_option) VALUES
+    (1, 'What is the primary difference between AI and Machine Learning (ML)?', 'AI is a subset of ML focusing only on neural networks.', 'ML is a subset of AI that allows computers to learn from data without explicit programming.', 'AI refers only to humanoid robots, whereas ML refers to statistical formulas.', 'There is no difference; they are exact synonyms.', 'B'),
+    (1, 'Which of the following is an example of Supervised Learning?', 'Clustering customers based on purchasing history.', 'Training a chatbot to speak by letting it browse the internet.', 'Predicting house prices using a labeled dataset of historical home sales.', 'Reducing the number of dimensions in an image dataset.', 'C')
+    ON DUPLICATE KEY UPDATE question=VALUES(question);
+
+    -- Node 2: Python for AI
+    INSERT INTO quizzes (node_id, question, option_a, option_b, option_c, option_d, correct_option) VALUES
+    (2, 'Which Python library is primarily used for multi-dimensional array operations and scientific computation?', 'Pandas', 'NumPy', 'Scikit-Learn', 'Matplotlib', 'B'),
+    (2, 'How do you create a virtual environment in Python using the standard library?', 'python -m venv myenv', 'pip install virtualenv', 'npm init env', 'python -m conda myenv', 'A')
+    ON DUPLICATE KEY UPDATE question=VALUES(question);
+
+    -- Node 3: Deep Learning & Neural Networks
+    INSERT INTO quizzes (node_id, question, option_a, option_b, option_c, option_d, correct_option) VALUES
+    (3, 'What is the purpose of an activation function in a neural network?', 'To compute the loss between predicted and actual values.', 'To introduce non-linearity, allowing the network to learn complex patterns.', 'To adjust the learning rate during gradient descent.', 'To normalize the inputs of the input layer.', 'B'),
+    (3, 'What problem does the backpropagation algorithm solve?', 'It initializes the weights of a neural network randomly.', 'It computes the gradients of the loss function with respect to the network weights.', 'It accelerates the execution of model inference on CPUs.', 'It clusters data points in unsupervised fashion.', 'B')
+    ON DUPLICATE KEY UPDATE question=VALUES(question);
+
+    -- Node 4: Natural Language Processing (NLP)
+    INSERT INTO quizzes (node_id, question, option_a, option_b, option_c, option_d, correct_option) VALUES
+    (4, 'What is tokenization in NLP?', 'The process of translating text into a foreign language.', 'The process of converting a sequence of characters/text into smaller units called tokens.', 'Generating cryptographic keys for secure API communication.', 'Measuring the emotional sentiment of a sentence.', 'B')
+    ON DUPLICATE KEY UPDATE question=VALUES(question);
+
+    -- Node 5: Generative AI & Large Language Models (LLMs)
+    INSERT INTO quizzes (node_id, question, option_a, option_b, option_c, option_d, correct_option) VALUES
+    (5, 'What is the core mechanism behind the Transformer architecture that enables parallel processing of text?', 'Recurrent Connections (RNN)', 'Self-Attention Mechanism', 'Convolutional Layers (CNN)', 'Markov Chains', 'B'),
+    (5, 'What is the purpose of Retrieval-Augmented Generation (RAG)?', 'To retrain a model from scratch with custom data.', 'To dynamically retrieve relevant external documents and feed them to an LLM for factual answers.', 'To compress LLM models so they run on edge devices.', 'To generate synthetic training data for images.', 'B')
+    ON DUPLICATE KEY UPDATE question=VALUES(question);

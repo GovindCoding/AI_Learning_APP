@@ -1,0 +1,16 @@
+com\ailearning\tracker\learningservice\model\LearningNode.class
+com\ailearning\tracker\learningservice\model\Roadmap.class
+com\ailearning\tracker\learningservice\repository\DailyLogRepository.class
+com\ailearning\tracker\learningservice\service\RoadmapService.class
+com\ailearning\tracker\learningservice\repository\RoadmapRepository.class
+com\ailearning\tracker\learningservice\repository\LearningNodeRepository.class
+com\ailearning\tracker\learningservice\model\DailyLog$DailyLogBuilder.class
+com\ailearning\tracker\learningservice\model\Quiz.class
+com\ailearning\tracker\learningservice\model\Roadmap$RoadmapBuilder.class
+com\ailearning\tracker\learningservice\model\LearningNode$LearningNodeBuilder.class
+com\ailearning\tracker\learningservice\controller\RoadmapController.class
+com\ailearning\tracker\learningservice\repository\QuizRepository.class
+com\ailearning\tracker\learningservice\model\Quiz$QuizBuilder.class
+com\ailearning\tracker\learningservice\model\DailyLog.class
+com\ailearning\tracker\learningservice\controller\AnalyticsController.class
+com\ailearning\tracker\learningservice\LearningServiceApplication.class
