@@ -417,7 +417,8 @@ public class NewsSyncScheduler {
             "summary", "OpenAI is rolling out a new system designed to solve complex multi-step reasoning problems and browse deep internet sources to compile comprehensive answers.",
             "source", "OpenAI Blog",
             "category", "OpenAI updates",
-            "tags", "openai,strawberry,search,agent"
+            "tags", "openai,strawberry,search,agent",
+            "link", "https://openai.com/index/"
         ));
         // Anthropic
         templates.add(Map.of(
@@ -425,7 +426,8 @@ public class NewsSyncScheduler {
             "summary", "Anthropic has launched Claude 3.7 Opus, featuring advanced step-by-step reasoning capability and superior agent orchestration loops.",
             "source", "Anthropic Blog",
             "category", "Anthropic updates",
-            "tags", "claude,anthropic,release,reasoning"
+            "tags", "claude,anthropic,release,reasoning",
+            "link", "https://www.anthropic.com/news"
         ));
         // Google Gemini
         templates.add(Map.of(
@@ -433,35 +435,40 @@ public class NewsSyncScheduler {
             "summary", "Google showcased Gemini Omni, providing native audio and video interaction with zero lag, allowing developers to build immersive camera-based assistants.",
             "source", "Google Developers Blog",
             "category", "Gemini releases",
-            "tags", "google,gemini,omni,astra,realtime,multimodal,io"
+            "tags", "google,gemini,omni,astra,realtime,multimodal,io",
+            "link", "https://deepmind.google/technologies/project-astra/"
         ));
         templates.add(Map.of(
             "title", "Google DeepMind Rolls Out Gemini 3.5 Flash for High-Speed Multimodal Efficiency",
             "summary", "Google has announced Gemini 1.5 Flash, a lightweight model optimized for high-volume, low-latency, and cost-effective deployment with a 1-million token context window.",
             "source", "Google AI Blog",
             "category", "Gemini API updates",
-            "tags", "google,gemini,flash,release,aistudio,multimodal,speed"
+            "tags", "google,gemini,flash,release,aistudio,multimodal,speed",
+            "link", "https://blog.google/technology/ai/google-gemini-io-2024/"
         ));
         templates.add(Map.of(
             "title", "Google Search Upgrades with AI Overviews Globally, Powered by Gemini",
             "summary", "Google Search officially launched AI Overviews in query results, leveraging a customized Gemini model to summarize complex queries and link relevant sources.",
             "source", "Google AI Blog",
             "category", "Google Search AI changes",
-            "tags", "google,search,overview,gemini,seo"
+            "tags", "google,search,overview,gemini,seo",
+            "link", "https://blog.google/products/search/generative-ai-search/"
         ));
         templates.add(Map.of(
             "title", "Google Developers Unveil Antigravity: Next-Gen Autonomous AI Coding Agent",
             "summary", "Google Developers have showcased Antigravity, an open-source autonomous coding agent that hooks into the Gemini API to execute complex file refactoring and database migrations.",
             "source", "Google Developers Blog",
             "category", "Gemini agentic AI updates",
-            "tags", "google,gemini,antigravity,agent,coding,opensource"
+            "tags", "google,gemini,antigravity,agent,coding,opensource",
+            "link", "https://blog.google/technology/developers/"
         ));
         templates.add(Map.of(
             "title", "Google Cloud Vertex AI Integrates Gemma 4 Open-Source Lightweight Models",
             "summary", "Google has released Gemma 4 open-weights models in Vertex AI, providing highly-optimized local inference engines and LoRA fine-tuning support.",
             "source", "Google Cloud AI Blog",
             "category", "Gemma open-source updates",
-            "tags", "google,vertex,gemma,opensource,local"
+            "tags", "google,vertex,gemma,opensource,local",
+            "link", "https://cloud.google.com/blog/products/ai-machine-learning/gemma-2-on-vertex-ai"
         ));
         // DeepMind
         templates.add(Map.of(
@@ -469,7 +476,8 @@ public class NewsSyncScheduler {
             "summary", "AlphaFold 3 predicts 3D structures and molecular interactions of proteins, DNA, and RNA, accelerating pharmaceutical research and biotechnology breakthroughs.",
             "source", "DeepMind Blog",
             "category", "DeepMind research papers",
-            "tags", "google,deepmind,alphafold,biology,science"
+            "tags", "google,deepmind,alphafold,biology,science",
+            "link", "https://deepmind.google/discover/blog/introducing-alphafold-3/"
         ));
         // Meta
         templates.add(Map.of(
@@ -477,7 +485,8 @@ public class NewsSyncScheduler {
             "summary", "Meta has made Llama 4 available to the open-source community, featuring native multi-modality, massive context windows, and improved agentic capabilities.",
             "source", "Meta AI Blog",
             "category", "Meta AI updates",
-            "tags", "llama,meta,opensource,release"
+            "tags", "llama,meta,opensource,release",
+            "link", "https://ai.meta.com/blog/"
         ));
         // Hugging Face
         templates.add(Map.of(
@@ -485,7 +494,8 @@ public class NewsSyncScheduler {
             "summary", "Hugging Face launched Hub Agents, allowing developers to deploy fully autonomous AI coding assistants, data analysts, and researchers directly from any model page.",
             "source", "Hugging Face",
             "category", "AI GitHub trending",
-            "tags", "huggingface,agents,deployment,hub"
+            "tags", "huggingface,agents,deployment,hub",
+            "link", "https://huggingface.co/blog"
         ));
         // Mistral
         templates.add(Map.of(
@@ -493,7 +503,8 @@ public class NewsSyncScheduler {
             "summary", "Mistral AI has launched Pixtral 12B, a new multimodal model capable of processing high-resolution visual inputs and structured text prompts locally.",
             "source", "Mistral Blog",
             "category", "Mistral updates",
-            "tags", "mistral,pixtral,multimodal,release"
+            "tags", "mistral,pixtral,multimodal,release",
+            "link", "https://mistral.ai/news/"
         ));
         // Microsoft
         templates.add(Map.of(
@@ -501,7 +512,8 @@ public class NewsSyncScheduler {
             "summary", "Microsoft announced Copilot Agents, allowing enterprises to connect autonomous AI agents directly to internal SQL databases, SharePoint, and Teams channels.",
             "source", "Microsoft AI Blog",
             "category", "Microsoft AI updates",
-            "tags", "microsoft,copilot,agents,enterprise"
+            "tags", "microsoft,copilot,agents,enterprise",
+            "link", "https://blogs.microsoft.com/"
         ));
         // xAI
         templates.add(Map.of(
@@ -509,7 +521,8 @@ public class NewsSyncScheduler {
             "summary", "xAI is leveraging real-time discussion streams and breaking news from X (formerly Twitter) to train Grok-2.5, delivering high topical relevance.",
             "source", "xAI Blog",
             "category", "xAI updates",
-            "tags", "grok,xai,social,realtime"
+            "tags", "grok,xai,social,realtime",
+            "link", "https://x.ai/blog/"
         ));
 
         Map<String, String> selected = templates.get(random.nextInt(templates.size()));
@@ -518,6 +531,9 @@ public class NewsSyncScheduler {
         String suffix = " [" + random.nextInt(1000) + "]";
         String title = selected.get("title") + suffix;
 
+        String baseLink = selected.get("link");
+        String finalLink = baseLink + "?utm_source=ailearning&news_id=" + random.nextInt(10000);
+
         return NewsArticle.builder()
                 .title(title)
                 .summary(selected.get("summary"))
@@ -525,7 +541,7 @@ public class NewsSyncScheduler {
                 .category(selected.get("category"))
                 .tags(selected.get("tags"))
                 .publishedDate(LocalDateTime.now())
-                .articleLink("https://example.com/ai-news/" + selected.get("title").toLowerCase().replace(" ", "-") + "-" + random.nextInt(10000))
+                .articleLink(finalLink)
                 .author("AI Reporter")
                 .build();
     }

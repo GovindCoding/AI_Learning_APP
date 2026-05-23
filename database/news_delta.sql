@@ -37,7 +37,7 @@ VALUES
  'OpenAI Blog', 
  'OpenAI updates', 
  DATE_SUB(NOW(), INTERVAL 2 DAY), 
- 'https://openai.com/blog/gpt-4o-mini', 
+ 'https://openai.com/index/gpt-4o-mini/', 
  'openai,gpt4o,mini,release', 
  'AI Editor', 
  'OpenAI', 
@@ -57,7 +57,7 @@ VALUES
  'Anthropic Blog', 
  'Anthropic updates', 
  DATE_SUB(NOW(), INTERVAL 5 DAY), 
- 'https://anthropic.com/news/claude-3-5-sonnet', 
+ 'https://www.anthropic.com/news/claude-3-5-sonnet', 
  'claude,anthropic,llm,release', 
  'Lead Editor', 
  'Anthropic', 
@@ -77,7 +77,7 @@ VALUES
  'Google DeepMind', 
  'Google AI updates', 
  DATE_SUB(NOW(), INTERVAL 12 DAY), 
- 'https://deepmind.google/alphafold-3', 
+ 'https://deepmind.google/discover/blog/introducing-alphafold-3/', 
  'alphafold,deepmind,biology,research', 
  'Science Correspondent', 
  'Google DeepMind', 
@@ -97,7 +97,7 @@ VALUES
  'Meta AI Blog', 
  'Meta AI updates', 
  DATE_SUB(NOW(), INTERVAL 18 DAY), 
- 'https://meta.com/llama3', 
+ 'https://ai.meta.com/blog/meta-llama-3/', 
  'llama3,meta,opensource,release', 
  'AI Editor', 
  'Meta AI', 
@@ -117,7 +117,7 @@ VALUES
  'Microsoft Research', 
  'Microsoft AI updates', 
  DATE_SUB(NOW(), INTERVAL 25 DAY), 
- 'https://microsoft.com/phi3', 
+ 'https://azure.microsoft.com/en-us/blog/introducing-phi-3-redefining-whats-possible-with-slms/', 
  'phi3,microsoft,slm,edge', 
  'Research Lead', 
  'Microsoft AI', 
@@ -137,7 +137,7 @@ VALUES
  'Hugging Face', 
  'AI GitHub trending', 
  DATE_SUB(NOW(), INTERVAL 32 DAY), 
- 'https://huggingface.co/blog/leeloo', 
+ 'https://huggingface.co/blog', 
  'huggingface,leeloo,rlhf,multimodal', 
  'Hugging Face Team', 
  'Hugging Face', 
@@ -157,7 +157,7 @@ VALUES
  'Mistral AI Blog', 
  'Mistral updates', 
  DATE_SUB(NOW(), INTERVAL 40 DAY), 
- 'https://mistral.ai/news/codestral', 
+ 'https://mistral.ai/news/codestral/', 
  'mistral,codestral,coding,model', 
  'Mistral Dev Relations', 
  'Mistral AI', 
@@ -177,7 +177,7 @@ VALUES
  'xAI Blog', 
  'xAI updates', 
  DATE_SUB(NOW(), INTERVAL 48 DAY), 
- 'https://x.ai/blog/grok-1.5-vision', 
+ 'https://x.ai/blog/grok-1.5v', 
  'grok,xai,vision,multimodal', 
  'xAI Team', 
  'xAI', 
@@ -197,7 +197,7 @@ VALUES
  'Google DeepMind', 
  'Google AI updates', 
  DATE_SUB(NOW(), INTERVAL 55 DAY), 
- 'https://deepmind.google/project-astra', 
+ 'https://deepmind.google/technologies/project-astra/', 
  'google,io,astra,agents', 
  'Future Tech Reporter', 
  'Google DeepMind', 
@@ -210,3 +210,40 @@ VALUES
  '{"takeaways": "Project Astra highlights the shift toward zero-latency conversational multi-modal agents.", "beginner": "Google showed off an AI assistant that you can talk to in real-time through your phone camera or smart glasses.", "business": "Paves the way for active hands-free industrial assistants and remote technical support.", "developer": "Explore the upcoming Gemini Live API endpoints.", "learning": "Read the Google Research paper on low-latency audio-video processing loops."}', 
  'hash_astra', 
  '["https://techcrunch.com/google-io-project-astra", "https://news.ycombinator.com/item?id=project-astra"]');
+
+-- 4. Update the first 4 historical articles inserted by seed.sql to have correct fields (author, company, image, etc.)
+UPDATE news_articles 
+SET 
+  author = 'Anthropic Editors', 
+  ai_company = 'Anthropic', 
+  thumbnail_image = 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485', 
+  article_image = 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485',
+  article_link = 'https://www.anthropic.com/news/claude-3-5-sonnet'
+WHERE id = 1;
+
+UPDATE news_articles 
+SET 
+  author = 'DeepMind Team', 
+  ai_company = 'DeepMind', 
+  thumbnail_image = 'https://images.unsplash.com/photo-1532187643603-ba119ca4109e', 
+  article_image = 'https://images.unsplash.com/photo-1532187643603-ba119ca4109e',
+  article_link = 'https://deepmind.google/discover/blog/introducing-alphafold-3/'
+WHERE id = 2;
+
+UPDATE news_articles 
+SET 
+  author = 'OpenAI Safety Board', 
+  ai_company = 'OpenAI', 
+  thumbnail_image = 'https://images.unsplash.com/photo-1677442136019-21780efad99a', 
+  article_image = 'https://images.unsplash.com/photo-1677442136019-21780efad99a',
+  article_link = 'https://openai.com/index/openai-safety-and-security-committee/'
+WHERE id = 3;
+
+UPDATE news_articles 
+SET 
+  author = 'Hacker News Community', 
+  ai_company = 'Generic', 
+  thumbnail_image = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b', 
+  article_image = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b',
+  article_link = 'https://news.ycombinator.com/item?id=40428320'
+WHERE id = 4;

@@ -825,7 +825,26 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({ setActivePage }) => {
                   let refList: Array<{ name: string; url: string }> = [];
                   if (article.alternativeReferences) {
                     try {
-                      refList = JSON.parse(article.alternativeReferences);
+                      const parsed = JSON.parse(article.alternativeReferences);
+                      if (Array.isArray(parsed)) {
+                        refList = parsed.map(item => {
+                          if (typeof item === 'string') {
+                            let name = 'Source';
+                            try {
+                              const urlObj = new URL(item);
+                              name = urlObj.hostname.replace('www.', '');
+                            } catch (e) {
+                              // fallback
+                            }
+                            return { name, url: item };
+                          } else if (item && typeof item === 'object' && item.url) {
+                            return { name: item.name || 'Source', url: item.url };
+                          }
+                          return null;
+                        }).filter(Boolean) as Array<{ name: string; url: string }>;
+                      } else {
+                        refList = [];
+                      }
                     } catch (e) {
                       refList = article.alternativeReferences.split(',').map(r => ({ name: r.trim(), url: '#' }));
                     }
@@ -875,16 +894,17 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({ setActivePage }) => {
                           </div>
                         </div>
 
-                        {/* Article Image Banner (if available) */}
-                        {article.thumbnailImage && (
-                          <div className="w-full h-36 rounded-xl overflow-hidden mb-3 border border-borderBg-light dark:border-borderBg-dark bg-slate-100 dark:bg-slate-900">
-                            <img 
-                              src={article.thumbnailImage} 
-                              alt={article.title} 
-                              className="w-full h-full object-cover hover:scale-103 transition-transform duration-500" 
-                            />
-                          </div>
-                        )}
+                        {/* Article Image Banner */}
+                        <div className="w-full h-36 rounded-xl overflow-hidden mb-3 border border-borderBg-light dark:border-borderBg-dark bg-slate-100 dark:bg-slate-900">
+                          <img 
+                            src={article.thumbnailImage || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe'} 
+                            alt={article.title} 
+                            className="w-full h-full object-cover hover:scale-103 transition-transform duration-500" 
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe';
+                            }}
+                          />
+                        </div>
 
                         {/* Headline Title */}
                         <h4 
