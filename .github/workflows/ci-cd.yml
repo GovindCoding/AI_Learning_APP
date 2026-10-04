@@ -455,47 +455,22 @@ jobs:
             cp README.md package-staging/ 2>/dev/null || true
           fi
 
-          # Generate Build Info Metadata safely via Python 3
-          APP_VER="${VERSION}" \
-          GIT_COMMIT="${{ needs.prepare.outputs.commit_sha }}" \
-          SHORT_COMMIT="${{ needs.prepare.outputs.short_sha }}" \
-          GIT_BRANCH="${{ github.ref_name }}" \
-          BUILD_NUM="${{ needs.prepare.outputs.build_number }}" \
-          BUILD_TIME="${{ needs.prepare.outputs.build_timestamp }}" \
-          IS_RELEASE="${{ needs.prepare.outputs.is_release }}" \
-          JAVA_VER="${{ env.JAVA_VERSION }}" \
-          NODE_VER="${{ env.NODE_VERSION }}" \
-          python3 -c '
-import json, os
+          # Generate Build Info Metadata safely
+          printf '{\n  "application": "ai-learning-tracker",\n  "version": "%s",\n  "gitCommit": "%s",\n  "shortCommit": "%s",\n  "branch": "%s",\n  "buildNumber": %s,\n  "buildTimestamp": "%s",\n  "isRelease": %s,\n  "runtimes": {\n    "java": "%s",\n    "node": "%s",\n    "springBoot": "3.3.4",\n    "angular": "22.2.0"\n  },\n  "services": [\n    "discovery-server",\n    "gateway-service",\n    "auth-service",\n    "learning-service",\n    "tools-news-service",\n    "social-image-service",\n    "frontend-angular"\n  ]\n}\n' \
+            "${VERSION}" \
+            "${{ needs.prepare.outputs.commit_sha }}" \
+            "${{ needs.prepare.outputs.short_sha }}" \
+            "${{ github.ref_name }}" \
+            "${{ needs.prepare.outputs.build_number }}" \
+            "${{ needs.prepare.outputs.build_timestamp }}" \
+            "${{ needs.prepare.outputs.is_release }}" \
+            "${{ env.JAVA_VERSION }}" \
+            "${{ env.NODE_VERSION }}" > package-staging/build-info.json
 
-data = {
-    "application": "ai-learning-tracker",
-    "version": os.environ.get("APP_VER", "unknown"),
-    "gitCommit": os.environ.get("GIT_COMMIT", ""),
-    "shortCommit": os.environ.get("SHORT_COMMIT", ""),
-    "branch": os.environ.get("GIT_BRANCH", ""),
-    "buildNumber": int(os.environ.get("BUILD_NUM", "0") or "0"),
-    "buildTimestamp": os.environ.get("BUILD_TIME", ""),
-    "isRelease": os.environ.get("IS_RELEASE", "").lower() == "true",
-    "runtimes": {
-        "java": os.environ.get("JAVA_VER", "21"),
-        "node": os.environ.get("NODE_VER", "20"),
-        "springBoot": "3.3.4",
-        "angular": "22.2.0"
-    },
-    "services": [
-        "discovery-server",
-        "gateway-service",
-        "auth-service",
-        "learning-service",
-        "tools-news-service",
-        "social-image-service",
-        "frontend-angular"
-    ]
-}
-with open("package-staging/build-info.json", "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2)
-'
+          python3 -m json.tool package-staging/build-info.json > /dev/null || {
+            echo "Error: Failed to generate valid build-info.json"
+            exit 1
+          }
 
           # Ensure zip utility is available and create release archive
           command -v zip >/dev/null 2>&1 || sudo apt-get install -y -qq zip
