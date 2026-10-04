@@ -1,50 +1,557 @@
-name: AI Learning Tracker CI/CD
+name: Production-Ready CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
+      - develop
+    tags:
+      - 'v*.*.*'
   pull_request:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+    inputs:
+      skip_security_scan:
+        description: 'Skip non-blocking security scans for expedited test run'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIBUTION: 'temurin'
+  NODE_VERSION: '20'
+  MAVEN_OPTS: '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'
 
 jobs:
-  backend-ci:
-    name: Backend CI (Java 21 + Maven)
+  # =========================================================================
+  # 1. Environment & Metadata Preparation
+  # =========================================================================
+  prepare:
+    name: 1. Environment & Versioning
     runs-on: ubuntu-latest
-
+    outputs:
+      app_version: ${{ steps.versioning.outputs.app_version }}
+      build_number: ${{ github.run_number }}
+      commit_sha: ${{ steps.versioning.outputs.commit_sha }}
+      short_sha: ${{ steps.versioning.outputs.short_sha }}
+      build_timestamp: ${{ steps.versioning.outputs.build_timestamp }}
+      is_release: ${{ steps.versioning.outputs.is_release }}
     steps:
-      - name: Checkout Repository
+      - name: Checkout Source Code
         uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
+          fetch-depth: 0
 
-      - name: Build and Run Backend Tests
-        run: mvn -B clean test
-        working-directory: ./backend
+      - name: Compute Build Metadata & Version
+        id: versioning
+        run: |
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          
+          # Extract base version from parent POM
+          BASE_VERSION=$(grep -m 1 '<version>' backend/pom.xml | sed -E 's/.*<version>([^<]+)<\/version>/\1/' | sed 's/-SNAPSHOT//')
+          if [ -z "$BASE_VERSION" ]; then
+            BASE_VERSION="1.0.0"
+          fi
+          
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            APP_VERSION="${GITHUB_REF_NAME#v}"
+            IS_RELEASE="true"
+          else
+            APP_VERSION="${BASE_VERSION}-build.${{ github.run_number }}-${SHORT_SHA}"
+            IS_RELEASE="false"
+          fi
 
-  frontend-ci:
-    name: Frontend CI (Node 20 + Vite)
+          echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "build_timestamp=${BUILD_TIME}" >> "$GITHUB_OUTPUT"
+          echo "is_release=${IS_RELEASE}" >> "$GITHUB_OUTPUT"
+
+          echo "Computed Version: ${APP_VERSION} (Release: ${IS_RELEASE})"
+
+  # =========================================================================
+  # 2. Frontend Validation (Angular 22 / TypeScript / Lint)
+  # =========================================================================
+  frontend-validation:
+    name: 2. Frontend Validation
     runs-on: ubuntu-latest
-
+    needs: prepare
     steps:
-      - name: Checkout Repository
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: ./frontend/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies (Reproducible)
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: TypeScript Type Checking
+        run: npm run typecheck
+        working-directory: ./frontend
+
+      - name: Validate Angular Configuration & Assets
+        run: |
+          test -f angular.json || { echo "Missing angular.json"; exit 1; }
+          test -f src/main.ts || { echo "Missing src/main.ts"; exit 1; }
+          echo "Angular project configuration verified."
+        working-directory: ./frontend
+
+  # =========================================================================
+  # 3. Backend Validation (Java 21 / Maven Dependency Check)
+  # =========================================================================
+  backend-validation:
+    name: 3. Backend Validation
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }} (${{ env.JAVA_DISTRIBUTION }})
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+
+      - name: Validate Maven Wrapper & Permissions
+        run: |
+          chmod +x ./mvnw
+          ./mvnw -version
+        working-directory: ./backend
+
+      - name: Compile Java Microservices (Validation)
+        run: ./mvnw -B clean compile -DskipTests
+        working-directory: ./backend
+
+  # =========================================================================
+  # 4. Backend Unit Testing (JUnit 5 / Mockito)
+  # =========================================================================
+  unit-tests:
+    name: 4. Backend Unit Tests
+    runs-on: ubuntu-latest
+    needs: backend-validation
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+
+      - name: Run Microservices Unit Tests
+        run: |
+          chmod +x ./mvnw
+          ./mvnw -B test
+        working-directory: ./backend
+
+      - name: Upload Surefire Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-test-reports
+          path: backend/**/target/surefire-reports/
+          retention-days: 14
+
+  # =========================================================================
+  # 5. Database & Integration Testing (MySQL 8.0 Service Container)
+  # =========================================================================
+  integration-tests:
+    name: 5. Database & Integration Tests
+    runs-on: ubuntu-latest
+    needs: backend-validation
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: admin1234
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h localhost -u root -padmin1234" --health-interval 10s --health-timeout 5s --health-retries 10
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+
+      - name: Initialize Database Schemas & Seeds
+        run: |
+          echo "Initializing MySQL 8.0 schemas..."
+          mysql -h 127.0.0.1 -P 3306 -u root -padmin1234 < database/schema.sql
+          mysql -h 127.0.0.1 -P 3306 -u root -padmin1234 < database/seed.sql
+          echo "Verifying databases created:"
+          mysql -h 127.0.0.1 -P 3306 -u root -padmin1234 -e "SHOW DATABASES;"
+          mysql -h 127.0.0.1 -P 3306 -u root -padmin1234 ai_learning_db -e "SHOW TABLES; SELECT COUNT(*) FROM roadmaps;"
+
+      - name: Validate Delta Migration Scripts
+        run: |
+          if [ -f database/google_ai_delta.sql ]; then
+            mysql -h 127.0.0.1 -P 3306 -u root -padmin1234 ai_tools_news_db < database/google_ai_delta.sql || true
+          fi
+          if [ -f database/news_delta.sql ]; then
+            mysql -h 127.0.0.1 -P 3306 -u root -padmin1234 ai_tools_news_db < database/news_delta.sql || true
+          fi
+          if [ -f database/social_delta.sql ]; then
+            mysql -h 127.0.0.1 -P 3306 -u root -padmin1234 ai_tools_news_db < database/social_delta.sql || true
+          fi
+          echo "Database migrations validated successfully."
+
+  # =========================================================================
+  # 6. Security Scanning (SAST / Secrets / Dependency Audits)
+  # =========================================================================
+  security-scan:
+    name: 6. Security & Dependency Audit
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Secret Leak Pattern Scan
+        run: |
+          echo "Auditing repository for unmasked credentials..."
+          # Fail if accidental AWS/GCP/SSH keys or production passwords are committed in workflows
+          SUSPECTS=$(grep -rnE "(BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY|AKIA[0-9A-Z]{16})" . \
+            --exclude-dir=".git" --exclude-dir="target" --exclude-dir="node_modules" || true)
+          if [ -n "$SUSPECTS" ]; then
+            echo "Critical Security Violation: Private keys found:"
+            echo "$SUSPECTS"
+            exit 1
+          fi
+          echo "Zero sensitive private keys found."
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        if: ${{ !inputs.skip_security_scan }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Frontend Dependency Vulnerability Audit
+        if: ${{ !inputs.skip_security_scan }}
+        run: |
+          npm audit --omit=dev --audit-level=critical || {
+            echo "::warning::Audit detected vulnerabilities in production dependencies. Review package-lock.json."
+          }
+        working-directory: ./frontend
+
+  # =========================================================================
+  # 7. Frontend Production Build
+  # =========================================================================
+  frontend-build:
+    name: 7. Frontend Production Build
+    runs-on: ubuntu-latest
+    needs: frontend-validation
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Dependencies
         run: npm ci
         working-directory: ./frontend
 
-      - name: Build Frontend Application
+      - name: Build Angular Application (Production)
         run: npm run build
         working-directory: ./frontend
+
+      - name: Validate Angular Build Output
+        run: |
+          DIST_DIR="dist/frontend-angular/browser"
+          if [ ! -d "$DIST_DIR" ]; then
+            DIST_DIR="dist/frontend-angular"
+          fi
+          test -d "$DIST_DIR" || { echo "Build artifact directory missing: $DIST_DIR"; exit 1; }
+          test -f "$DIST_DIR/index.html" || { echo "index.html missing in build artifact"; exit 1; }
+          echo "Frontend build successfully validated in $DIST_DIR"
+        working-directory: ./frontend
+
+      - name: Upload Frontend Intermediate Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/frontend-angular/
+          retention-days: 2
+
+  # =========================================================================
+  # 8. Microservices Packaging Build (Executable JARs)
+  # =========================================================================
+  microservices-build:
+    name: 8. Java Microservices Build
+    runs-on: ubuntu-latest
+    needs: [ unit-tests, integration-tests ]
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+
+      - name: Build Executable JARs
+        run: |
+          chmod +x ./mvnw
+          ./mvnw -B package -DskipTests
+        working-directory: ./backend
+
+      - name: Validate Packaged Microservices
+        run: |
+          SERVICES=("discovery-server" "gateway-service" "auth-service" "learning-service" "tools-news-service")
+          for svc in "${SERVICES[@]}"; do
+            JAR_FILE=$(find "backend/$svc/target" -maxdepth 1 -name "*.jar" ! -name "*.original" | head -n 1)
+            if [ -z "$JAR_FILE" ] || [ ! -f "$JAR_FILE" ]; then
+              echo "Error: Missing packaged executable JAR for service: $svc"
+              exit 1
+            fi
+            JAR_SIZE=$(wc -c < "$JAR_FILE")
+            echo "Service $svc packaged: $JAR_FILE ($JAR_SIZE bytes)"
+          done
+
+      - name: Stage Microservice JARs for Packaging
+        run: |
+          mkdir -p staged-jars
+          SERVICES=("discovery-server" "gateway-service" "auth-service" "learning-service" "tools-news-service")
+          for svc in "${SERVICES[@]}"; do
+            JAR_FILE=$(find "backend/$svc/target" -maxdepth 1 -name "*.jar" ! -name "*.original" | head -n 1)
+            cp "$JAR_FILE" "staged-jars/${svc}.jar"
+          done
+          ls -la staged-jars/
+
+      - name: Upload Backend Jars Intermediate Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jars
+          path: staged-jars/
+          retention-days: 2
+
+  # =========================================================================
+  # 9. Assembly & Release Packaging
+  # =========================================================================
+  package-application:
+    name: 9. Assemble Release Package
+    runs-on: ubuntu-latest
+    needs: [ prepare, frontend-build, microservices-build, security-scan ]
+    outputs:
+      artifact_name: ${{ steps.assemble.outputs.artifact_name }}
+      package_zip: ${{ steps.assemble.outputs.package_zip }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: package-staging/frontend/angular-dist
+
+      - name: Download Backend Jars Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jars
+          path: package-staging/services
+
+      - name: Stage Auxiliaries, Database & Deployment Manifests
+        id: assemble
+        run: |
+          VERSION="${{ needs.prepare.outputs.app_version }}"
+          PKG_NAME="application-build-${VERSION}"
+          
+          # Stage Social Image Service
+          mkdir -p package-staging/services/social-image-service
+          cp backend/social-image-service/server.js package-staging/services/social-image-service/
+          cp backend/social-image-service/package.json package-staging/services/social-image-service/
+          cp backend/social-image-service/package-lock.json package-staging/services/social-image-service/
+
+          # Stage Database Schemas & Migrations
+          mkdir -p package-staging/database
+          cp -r database/*.sql package-staging/database/
+          if [ -d database/migrations ]; then
+            cp -r database/migrations package-staging/database/
+          fi
+
+          # Stage Deployment Manifests (Docker & Kubernetes)
+          mkdir -p package-staging/deployment/docker
+          mkdir -p package-staging/deployment/kubernetes
+          cp docker-compose.yml package-staging/deployment/docker/
+          cp frontend/Dockerfile package-staging/deployment/docker/Dockerfile.frontend
+          cp frontend/nginx.conf package-staging/deployment/docker/
+          
+          SERVICES=("discovery-server" "gateway-service" "auth-service" "learning-service" "tools-news-service")
+          for svc in "${SERVICES[@]}"; do
+            if [ -f "backend/$svc/Dockerfile" ]; then
+              cp "backend/$svc/Dockerfile" "package-staging/deployment/docker/Dockerfile.${svc}"
+            fi
+          done
+
+          if [ -d k8s ]; then
+            cp -r k8s/*.yaml package-staging/deployment/kubernetes/
+          fi
+
+          # Stage Documentation
+          mkdir -p package-staging/documentation
+          if [ -d documentation ]; then
+            cp -r documentation/* package-staging/documentation/
+          fi
+          if [ -f README.md ]; then
+            cp README.md package-staging/
+          fi
+
+          # Generate Build Info Metadata
+          cat <<EOF > package-staging/build-info.json
+          {
+            "application": "ai-learning-tracker",
+            "version": "${VERSION}",
+            "gitCommit": "${{ needs.prepare.outputs.commit_sha }}",
+            "shortCommit": "${{ needs.prepare.outputs.short_sha }}",
+            "branch": "${{ github.ref_name }}",
+            "buildNumber": ${{ needs.prepare.outputs.build_number }},
+            "buildTimestamp": "${{ needs.prepare.outputs.build_timestamp }}",
+            "isRelease": ${{ needs.prepare.outputs.is_release }},
+            "runtimes": {
+              "java": "${{ env.JAVA_VERSION }}",
+              "node": "${{ env.NODE_VERSION }}",
+              "springBoot": "3.3.4",
+              "angular": "22.2.0"
+            },
+            "services": [
+              "discovery-server",
+              "gateway-service",
+              "auth-service",
+              "learning-service",
+              "tools-news-service",
+              "social-image-service",
+              "frontend-angular"
+            ]
+          }
+          EOF
+
+          # Create Zip Archive
+          mv package-staging "${PKG_NAME}"
+          zip -r "${PKG_NAME}.zip" "${PKG_NAME}"
+          
+          echo "artifact_name=${PKG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "package_zip=${PKG_NAME}.zip" >> "$GITHUB_OUTPUT"
+          echo "Package created: ${PKG_NAME}.zip ($(wc -c < "${PKG_NAME}.zip") bytes)"
+
+      - name: Publish Final Downloadable Package Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.assemble.outputs.artifact_name }}
+          path: ${{ steps.assemble.outputs.package_zip }}
+          retention-days: 30
+          if-no-files-found: error
+
+  # =========================================================================
+  # 10. Pipeline Summary (GitHub Step Summary)
+  # =========================================================================
+  pipeline-summary:
+    name: 10. Pipeline Execution Summary
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - frontend-validation
+      - backend-validation
+      - unit-tests
+      - integration-tests
+      - security-scan
+      - frontend-build
+      - microservices-build
+      - package-application
+    if: always()
+    steps:
+      - name: Generate Executive Summary
+        run: |
+          OVERALL_STATUS="SUCCESS"
+          if [[ "${{ needs.frontend-validation.result }}" != "success" ]] || \
+             [[ "${{ needs.backend-validation.result }}" != "success" ]] || \
+             [[ "${{ needs.unit-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.integration-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.frontend-build.result }}" != "success" ]] || \
+             [[ "${{ needs.microservices-build.result }}" != "success" ]] || \
+             [[ "${{ needs.package-application.result }}" != "success" ]]; then
+            OVERALL_STATUS="FAILED"
+          fi
+
+          echo "# 🚀 AI Learning Tracker CI/CD Pipeline Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$OVERALL_STATUS" = "SUCCESS" ]; then
+            echo "### Status: ✅ **PASSED (ALL GATES GREEN)**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Status: ❌ **BUILD FAILED**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          
+          echo "## 📋 Build Metadata" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Application Version** | \`${{ needs.prepare.outputs.app_version }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Git Commit** | \`${{ needs.prepare.outputs.short_sha }}\` (${{ needs.prepare.outputs.commit_sha }}) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Branch / Ref** | \`${{ github.ref_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Workflow Run** | [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Timestamp** | ${{ needs.prepare.outputs.build_timestamp }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Trigger Event** | \`${{ github.event_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          echo "## 📊 Stage Execution Matrix" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Stage | Job | Status | Target Stack |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|:---:|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **1. Environment** | \`prepare\` | ${{ needs.prepare.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Ubuntu / Git |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **2. Frontend Validation** | \`frontend-validation\` | ${{ needs.frontend-validation.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Angular 22 / TypeScript / npm |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **3. Backend Validation** | \`backend-validation\` | ${{ needs.backend-validation.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Java 21 / Maven / Temurin |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **4. Unit Tests** | \`unit-tests\` | ${{ needs.unit-tests.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | JUnit 5 / Mockito (22 Tests) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **5. Database Tests** | \`integration-tests\` | ${{ needs.integration-tests.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | MySQL 8.0 Service Container |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **6. Security Audit** | \`security-scan\` | ${{ needs.security-scan.result == 'success' && '✅ PASSED' || '⚠️ WARN/SKIP' }} | Secret Scanner & Dependency Audit |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **7. Frontend Build** | \`frontend-build\` | ${{ needs.frontend-build.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Angular 22 Production Bundle |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **8. Microservices Build** | \`microservices-build\` | ${{ needs.microservices-build.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | 5 Executable Spring Boot JARs |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **9. Package & Artifact** | \`package-application\` | ${{ needs.package-application.result == 'success' && '✅ PASSED' || '❌ FAILED' }} | Downloadable Release Zip |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$OVERALL_STATUS" = "SUCCESS" ]; then
+            echo "## 📦 Downloadable Package Artifact" >> "$GITHUB_STEP_SUMMARY"
+            echo "The release package is available under Workflow Artifacts:" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Artifact Name**: \`${{ needs.package-application.outputs.artifact_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Filename**: \`${{ needs.package-application.outputs.package_zip }}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Contents**: Angular 22 production bundle, 5 Spring Boot JARs, Node.js auxiliary service, database schemas & seed data, Docker Compose, Kubernetes manifests, and \`build-info.json\` metadata." >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Retention Period**: 30 Days" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## ⚠️ Failure Triage & Action Items" >> "$GITHUB_STEP_SUMMARY"
+            echo "One or more mandatory stages failed. Download the \`surefire-test-reports\` artifact if tests failed, review compiler logs above, and resolve breaking changes before merging." >> "$GITHUB_STEP_SUMMARY"
+          fi

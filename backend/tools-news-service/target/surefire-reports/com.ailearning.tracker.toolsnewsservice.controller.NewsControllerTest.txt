@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.ailearning.tracker.toolsnewsservice.controller.NewsControllerTest
+-------------------------------------------------------------------------------
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.021 s -- in com.ailearning.tracker.toolsnewsservice.controller.NewsControllerTest
