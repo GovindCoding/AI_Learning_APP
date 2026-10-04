@@ -61,7 +61,7 @@ concurrency:
 |---|---|---|---|
 | **Frontend UI** | Angular CLI / Standalone Components | `22.2.0` (CLI `22.2.1`) | [`frontend/`](../../frontend/) |
 | **Frontend Runtime** | Node.js / npm | Node `20.x` / npm `10.x` / `12.x` | [`frontend/package.json`](../../frontend/package.json) |
-| **Styling & Icons** | Tailwind CSS / Lucide Angular | `3.4.19` / `1.51.0` | [`frontend/tailwind.config.js`](../../frontend/tailwind.config.js) |
+| **Styling & Icons** | Tailwind CSS / Native Angular SVG Icons | `3.4.19` / Native | [`frontend/src/app/components/icon.component.ts`](../../frontend/src/app/components/icon.component.ts) |
 | **Backend Runtime** | Java OpenJDK (Temurin) | `21-LTS` | [`backend/pom.xml`](../../backend/pom.xml) |
 | **Backend Framework** | Spring Boot | `3.3.4` | [`backend/pom.xml`](../../backend/pom.xml) |
 | **Cloud Discovery** | Spring Cloud Netflix Eureka | `2023.0.3` | [`backend/discovery-server/`](../../backend/discovery-server/) |
