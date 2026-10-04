@@ -12,7 +12,7 @@ The pipeline automates end-to-end validation, testing, security auditing, contai
 flowchart TD
     TRIG[Git Commit / PR / Tag / Manual Dispatch] --> PREP[1. Environment & Versioning<br/>Compute version, build number & commit SHA]
     
-    PREP --> FE_VAL[2. Frontend Validation<br/>Node 20, npm ci, TypeScript typecheck]
+    PREP --> FE_VAL[2. Frontend Validation<br/>Node 24, npm ci, TypeScript typecheck]
     PREP --> BE_VAL[3. Backend Validation<br/>JDK 21, Maven wrapper, compile check]
     PREP --> SEC[6. Security & Dependency Audit<br/>Secret patterns, npm audit]
     
@@ -60,7 +60,7 @@ concurrency:
 | Component | Technology | Version | Location in Repository |
 |---|---|---|---|
 | **Frontend UI** | Angular CLI / Standalone Components | `22.2.0` (CLI `22.2.1`) | [`frontend/`](../../frontend/) |
-| **Frontend Runtime** | Node.js / npm | Node `20.x` / npm `10.x` / `12.x` | [`frontend/package.json`](../../frontend/package.json) |
+| **Frontend Runtime** | Node.js / npm | Node `24.x` / npm `12.x` | [`frontend/package.json`](../../frontend/package.json) |
 | **Styling & Icons** | Tailwind CSS / Native Angular SVG Icons | `3.4.19` / Native | [`frontend/src/app/components/icon.component.ts`](../../frontend/src/app/components/icon.component.ts) |
 | **Backend Runtime** | Java OpenJDK (Temurin) | `21-LTS` | [`backend/pom.xml`](../../backend/pom.xml) |
 | **Backend Framework** | Spring Boot | `3.3.4` | [`backend/pom.xml`](../../backend/pom.xml) |
@@ -83,7 +83,7 @@ concurrency:
 
 ### Job 2: `frontend-validation` (Angular & TypeScript)
 - Checks out repository.
-- Sets up Node.js 20 with cache keyed to `frontend/package-lock.json`.
+- Sets up Node.js 24 with cache keyed to `frontend/package-lock.json`.
 - Executes reproducible installation via `npm ci`.
 - Runs TypeScript static type checking: `npm run typecheck` (`tsc --noEmit`).
 - Verifies Angular configuration integrity (`angular.json`, `src/main.ts`).
