@@ -1,0 +1,10 @@
+{
+  "name": "ai-learning-tracker",
+  "version": "1.0.0",
+  "description": "AI Learning Tracker Root Workspace",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "start": "npm --prefix frontend start",
+    "build": "npm --prefix frontend run build"
+  }
+}

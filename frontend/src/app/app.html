@@ -1,0 +1,65 @@
+@if (authService.loading()) {
+  <div class="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center text-neon-cyan font-bold text-sm">
+    <app-icon name="sparkles" className="w-6 h-6 animate-spin mr-2"></app-icon> Initializing AI Engines...
+  </div>
+} @else if (!authService.user()) {
+  <app-login></app-login>
+} @else if (!authService.user()?.onboardingDone) {
+  <app-onboarding></app-onboarding>
+} @else {
+  <div class="min-h-screen bg-background-light dark:bg-background-dark font-sans relative overflow-x-hidden">
+    
+    <!-- Sidebar Navigation -->
+    <app-sidebar [activePage]="activePage" (activePageChange)="onPageChange($event)"></app-sidebar>
+
+    <!-- Main container with fixed offsets -->
+    <div class="pl-64 min-h-screen flex flex-col">
+      
+      <!-- Navbar -->
+      <app-navbar [pageTitle]="getPageTitle()"></app-navbar>
+
+      <!-- Content Pane -->
+      <main class="flex-1 mt-20 p-8 overflow-y-auto radial-bg">
+        @switch (activePage) {
+          @case ('dashboard') {
+            <app-dashboard (setActivePage)="onPageChange($event)"></app-dashboard>
+          }
+          @case ('roadmap') {
+            <app-roadmap (setActivePage)="onPageChange($event)"></app-roadmap>
+          }
+          @case ('tools') {
+            <app-tools-directory></app-tools-directory>
+          }
+          @case ('news') {
+            <app-news-feed (setActivePage)="onPageChange($event)"></app-news-feed>
+          }
+          @case ('google-ai') {
+            <app-google-ai-hub (setActivePage)="onPageChange($event)"></app-google-ai-hub>
+          }
+          @case ('social') {
+            <app-social-studio></app-social-studio>
+          }
+          @case ('modules') {
+            <app-learning-modules></app-learning-modules>
+          }
+          @case ('profile') {
+            <app-profile></app-profile>
+          }
+          @case ('settings') {
+            <app-settings></app-settings>
+          }
+          @case ('admin') {
+            <app-admin-panel></app-admin-panel>
+          }
+          @default {
+            <app-dashboard (setActivePage)="onPageChange($event)"></app-dashboard>
+          }
+        }
+      </main>
+    </div>
+
+    <!-- Floating Chatbot Assistant -->
+    <app-chatbot></app-chatbot>
+
+  </div>
+}

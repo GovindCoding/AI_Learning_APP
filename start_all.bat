@@ -41,8 +41,8 @@ echo Waiting 5 seconds...
 ping 127.0.0.1 -n 6 >nul
 
 echo.
-echo [+] Starting Frontend UI (Vite) on port 5173...
-start "Frontend" cmd /c "cd frontend && npm run dev"
+echo [+] Starting Frontend UI (Angular) on port 5173...
+start "Frontend" cmd /k "cd frontend && npm run dev"
 
 echo.
 echo ===================================================

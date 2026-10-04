@@ -83,8 +83,8 @@ start "AI App - Social Image Service" cmd /c "cd backend\social-image-service &&
 echo Waiting 5 seconds before starting Frontend UI...
 timeout /t 5 /nobreak >nul
 
-echo [+] Starting Frontend UI (Vite) on port 5173...
-start "AI App - Frontend UI" cmd /c "cd frontend && npm run dev"
+echo [+] Starting Frontend UI (Angular) on port 5173...
+start "AI App - Frontend UI" cmd /k "cd frontend && npm run dev"
 
 echo.
 echo ===================================================================
